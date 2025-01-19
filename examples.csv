@@ -20,3 +20,7 @@ printbin.dncl,18. 二進法で表示
 geo3x3.dncl,19. Geo3x3のエンコード、デコード
 scope.dncl,20. 変数のスコープ
 recursive.dncl,21. 関数の再帰呼び出し フィボナッチ数
+commontest2025-1.dncl,22. common test 2025 1
+commontest2025-1_ja.dncl,23. common test 2025 1 (日本語変数)
+commontest2025-2.dncl,24. common test 2025 2
+commontest2025-2_ja.dncl,25. common test 2025 2 (日本語変数)
