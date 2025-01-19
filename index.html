@@ -3,7 +3,7 @@
 </head><body>
 <h1>DNCL3実行環境</h1>
 
-サンプル <select id=selexamples></select> <label><input type=checkbox id=chkvar>実行後に変数表示</label>
+サンプル <select id=selexamples></select> <label><input type=checkbox id=chkvar checked>実行後に変数表示</label>
 <main>
 <div class=diveditor id=divprog></div>
 <div class=diveditor id=divrun></div>
@@ -108,6 +108,7 @@ for (const item of data) {
 }
 selexamples.oninput = async () => {
   const fn = selexamples.value;
+  location.hash = fn;
   const s = await (await fetch("examples/" + fn)).text();
   prog.setValue(s);
   onchange();
