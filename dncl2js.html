@@ -116,7 +116,8 @@ setInterval(() => {
 //const fn = "comment";
 //const fn = "input";
 //const fn = "test";
-const fn = "print";
+//const fn = "print";
+const fn = "import";
 
 const fn0 = location.hash.substring(1) || fn;
 const firstprog = await (await fetch("examples/" + fn0 + ".dncl")).text();

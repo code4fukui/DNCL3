@@ -84,7 +84,7 @@ const removeStartEnd = (json) => {
 };
 
 let bkval = null;
-const onchange = () => {
+const onchange = async () => {
   const src = prog.getValue();
   run.setValue("");
   run.revealLine(1);
@@ -92,7 +92,7 @@ const onchange = () => {
     const dncl = new DNCL3(src, (s) => {
       run.setValue(run.getValue() + s + "\n");
     });
-    dncl.run();
+    await dncl.run();
     if (chkvar.checked) {
       run.setValue(run.getValue() + "\nvars " + JSON.stringify(dncl.getVars(), null, 2) + "\n");
     }
