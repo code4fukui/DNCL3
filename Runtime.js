@@ -57,24 +57,9 @@ class Scope {
 
 export class Runtime {
   constructor(ast, callbackoutput, callbackinput) {
-    this.vars = {};
     this.callbackoutput = callbackoutput;
     this.callbackinput = callbackinput;
     this.ast = ast;
-  }
-  async output(s) {
-    if (this.callbackoutput) {
-      await this.callbackoutput(s);
-    } else {
-      console.log(s);
-    }
-  }
-  async input(s) {
-    if (this.callbackinput) {
-      return await this.callbackinput(s);
-    } else {
-      return prompt(s);
-    }
   }
   async getArrayIndex(ast, scope) {
     const prop = await this.calcExpression(ast, scope);
@@ -109,44 +94,36 @@ export class Runtime {
         }
       } else if (cmd.type == "CallExpression") {
         const name = cmd.callee.name;
-        if (name == "print") {
-          const res = [];
-          for (const i of cmd.arguments) {
-            res.push(await this.calcExpression(i, scope));
+        if (!scope.isDefined(name)) {
+          throw new Error("定義されていない関数 " + name + " が使われました");
+        }
+        const func = scope.getVar(name);
+        if (typeof func == "object") {
+          if (ast.arguments.length != func.params.length) {
+            throw new Error("引数の数が合っていません");
           }
-          await this.output(res.join(" "));
+          const scope2 = new Scope(scope);
+          for (let i = 0; i < ast.arguments.length; i++) {
+            const localvarname = func.params[i].name;
+            scope2.setVar(localvarname, await this.calcExpression(ast.arguments[i], scope), true);
+          }
+          try {
+            await this.runBlock(func.body, scope2);
+            //throw new Error("関数が値を返しませんでした");
+          } catch (e) {
+            if (e instanceof Return) {
+              //return e.getValue();
+            }
+            throw e;
+          }
+        } else if (typeof func == "function") {
+          const params = [];
+          for (let i = 0; i < ast.arguments.length; i++) {
+            params.push(await this.calcExpression(ast.arguments[i], scope));
+          }
+          await func(...params);
         } else {
-          if (!scope.isDefined(name)) {
-            throw new Error("定義されていない関数 " + name + " が使われました");
-          }
-          const func = scope.getVar(name);
-          if (typeof func == "object") {
-            if (ast.arguments.length != func.params.length) {
-              throw new Error("引数の数が合っていません");
-            }
-            const scope2 = new Scope(scope);
-            for (let i = 0; i < ast.arguments.length; i++) {
-              const localvarname = func.params[i].name;
-              scope2.setVar(localvarname, await this.calcExpression(ast.arguments[i], scope), true);
-            }
-            try {
-              await this.runBlock(func.body, scope2);
-              //throw new Error("関数が値を返しませんでした");
-            } catch (e) {
-              if (e instanceof Return) {
-                //return e.getValue();
-              }
-              throw e;
-            }
-          } else if (typeof func == "function") {
-            const params = [];
-            for (let i = 0; i < ast.arguments.length; i++) {
-              params.push(await this.calcExpression(ast.arguments[i], scope));
-            }
-            await func(...params);
-          } else {
-            new Error("関数ではないものが関数として呼び出されました")
-          }
+          new Error("関数ではないものが関数として呼び出されました")
         }
       } else if (cmd.type == "IfStatement") {
         const cond = await this.calcExpression(cmd.test, scope);
@@ -227,6 +204,28 @@ export class Runtime {
   }
   async run() {
     this.scope = new Scope();
+    const vars = this.scope.vars;
+    vars.print = async (...args) => {
+      const s = args.join(" ");
+      if (this.callbackoutput) {
+        await this.callbackoutput(s);
+      } else {
+        console.log(s);
+      }
+    };
+    vars.input = async (s) => {
+      const toint = (s) => {
+        if (s == null) return "";
+        const f = parseFloat(s);
+        if (!isNaN(f) && f.toString() == s) return f;
+        return s;
+      };
+      if (this.callbackinput) {
+        return toint(await this.callbackinput(s));
+      } else {
+        return toint(prompt(s));
+      }
+    };
     await this.runBlock(this.ast, this.scope);
     //console.log(this.vars);
   }
@@ -314,6 +313,7 @@ export class Runtime {
       }
     } else if (ast.type == "CallExpression") {
       const name = ast.callee.name;
+      /*
       if (name == "input") {
         if (ast.arguments.length > 1) {
           throw new Error("引数の数が合っていません");
@@ -325,6 +325,7 @@ export class Runtime {
         if (!isNaN(f) && f.toString() == s) return f;
         return s;
       }
+      */
       if (!scope.isDefined(name)) {
         throw new Error("定義されていない関数 " + name + " が使われました");
       }
