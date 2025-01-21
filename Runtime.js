@@ -1,3 +1,5 @@
+const DEFAULT_MAX_LOOP = 1000;
+
 const isUpperAlphabet = (c) => "ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(c) >= 0;
 
 const isConstantName = (s) => {
@@ -219,7 +221,7 @@ export class Runtime {
       throw new Error(funcname + "の呼び出し回数が、" + this.maxloop + "回の繰り返し上限に達しました");
     }
   }
-  async run(maxloop) {
+  async run(maxloop = DEFAULT_MAX_LOOP) {
     this.maxloop = parseInt(maxloop);
     if (isNaN(this.maxloop)) throw new Error("maxloopが不正です");
     this.callcount = {};
