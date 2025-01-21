@@ -84,7 +84,10 @@ const removeStartEnd = (json) => {
 };
 
 let bkval = null;
+let running = false;
 const onchange = async () => {
+  if (running) return;
+  running = true;
   const src = prog.getValue();
   run.setValue("");
   run.revealLine(1);
@@ -102,6 +105,7 @@ const onchange = async () => {
     run.setValue(run.getValue() + e.toString() + "\n");
   }
   bkval = src;
+  running = false;
 };
 
 //prog.onDidChangeModelContent = onchange; // なぜか初回のみ
