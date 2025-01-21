@@ -3,7 +3,9 @@
 </head><body>
 <h1>DNCL3実行環境</h1>
 
-サンプル <select id=selexamples></select> <label><input type=checkbox id=chkvar checked>実行後に変数表示</label>
+サンプル <select id=selexamples></select>
+<label><input type=checkbox id=chkvar checked>変数表示</label>
+<label><input type=checkbox id=chkmaxloop checked>繰り返し上限 <input id=inmaxloop value=1000></label>
 <main>
 <div class=diveditor id=divprog></div>
 <div class=diveditor id=divrun></div>
@@ -26,6 +28,12 @@ h1 {
 }
 a {
   color: gray !important;
+}
+#inmaxloop {
+  width: 4em;
+}
+label {
+  white-space: nowrap;
 }
 @media only screen and (max-width: 600px) {
   .diveditor {
@@ -95,7 +103,8 @@ const onchange = async () => {
     const dncl = new DNCL3(src, (s) => {
       run.setValue(run.getValue() + s + "\n");
     });
-    await dncl.run();
+    const maxloop = chkmaxloop.checked ? inmaxloop.value : 0;
+    await dncl.run(maxloop);
     if (chkvar.checked) {
       run.setValue(run.getValue() + "\nvars " + JSON.stringify(dncl.getVars(), null, 2) + "\n");
     }
@@ -135,7 +144,7 @@ const fn0 = location.hash.substring(1) || fn;
 selexamples.value = fn0;
 selexamples.oninput();
 
-chkvar.oninput = () => onchange();
+chkvar.oninput = chkmaxloop.oninput = inmaxloop.oninput = () => onchange();
 </script>
 
 </body></html>
