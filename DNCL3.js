@@ -2,8 +2,8 @@
 import { Runtime } from "./Runtime.js";
 
 const reserved = [
-  "print",
-  //"input",
+  //"print", "?",
+  // "input", // ? == print
   "if", "then", "else",
   "while", "do", "until", "for", "to", "step", "break",
   "function", "return", "from",
@@ -12,6 +12,7 @@ const reserved = [
 
 const isNumber = (c) => "0123456789".indexOf(c) >= 0;
 const isOperator = (c) => "+-*/%=!<>,".indexOf(c) >= 0;
+const isWhite = (c) => " \t\n".indexOf(c) >= 0;
 
 export class DNCL3 {
   constructor(s, callbackoutput, callbackinput) {
@@ -26,6 +27,26 @@ export class DNCL3 {
     const res = this.s[this.p];
     this.p++;
     return res;
+  }
+  ungetChar() {
+    this.p--;
+  }
+  getCharNotWhite() {
+    for (;;) {
+      const c = this.getChar();
+      if (c === undefined) return c;
+      if (!isWhite(c)) return c;
+    }
+  }
+  checkEOL() {
+    let p = this.p;
+    for (;;) {
+      const c = this.s[p++];
+      if (c === undefined || c == "\n") break;
+      if (!isWhite(c)) return false;
+    }
+    this.p = p;
+    return true;
   }
   getToken(reteol = false) {
     const STATE_FIRST = 0;
@@ -49,6 +70,8 @@ export class DNCL3 {
           continue;
         } else if (c === undefined) {
           return { pos, type: "eof" };
+        } else if (c == "?") {
+          return { pos, type: "var", name: "print" };
         } else if (c == "#") {
           state = STATE_COMMENT;
         } else if (c == "{" || c == "}" || c == "(" || c == ")" || c == "[" || c == "]") {
@@ -246,7 +269,7 @@ export class DNCL3 {
       const chk = this.getToken();
       if (chk.type != "(") {
         this.backToken(chk);
-        return this.getVar(t1.name);
+        return this.parseVar(t1.name);
       }
       // function call
       const args = [];
@@ -375,7 +398,7 @@ export class DNCL3 {
       }
     }
   }
-  getVar(name) {
+  parseVar(name) {
     let op = this.getToken();
 
     const array = [];
@@ -425,50 +448,26 @@ export class DNCL3 {
       this.backToken(token);
       return false;
     }
-    if (token.type == "print") {
-      const res = [];
-      const chk = this.getToken(true);
-      if (chk.type == "eol" || chk.type == "eof") {
-        this.backToken(chk);
-      } else {
-        this.backToken(chk);
-        for (;;) {
-          res.push(this.getExpression());
-          const op = this.getToken();
-          if (op.type == "eol" || op.type == "eof") {
-            this.backToken(op);
-            break;
-          }
-          if (op.operator != ",") {
-            this.backToken(op);
-            break;
-            //throw new Error("表示はコンマ区切りのみ対応しています");
-          }
-        }
-      }
-      body.push({
-        type: "ExpressionStatement",
-        expression: {
-          type: "CallExpression",
-          callee: {
-            type: "Identifier",
-            name: "print",
-          },
-          arguments: res,
-        },
-      });
-    } else if (token.type == "var" || token.type == "input") {
-      const chk = this.getToken();
-      if (chk.type == "(") { // function
-        const params = [];
-        const chk = this.getToken();
-        if (chk.type != ")") {
+    if (token.type == "var") {
+      if (token.name == "print") {
+        const res = [];
+        const chk = this.getToken(true);
+        if (chk.type == "eol" || chk.type == "eof") {
+          this.backToken(chk);
+        } else {
           this.backToken(chk);
           for (;;) {
-            params.push(this.getExpression());
-            const cma = this.getToken();
-            if (cma.type == ")") break;
-            if (cma.type != "operator" && cma.operator != ",") throw new Error("引数の区切り , が必要です");
+            res.push(this.getExpression());
+            const op = this.getToken();
+            if (op.type == "eol" || op.type == "eof") {
+              this.backToken(op);
+              break;
+            }
+            if (op.operator != ",") {
+              this.backToken(op);
+              break;
+              //throw new Error("表示はコンマ区切りのみ対応しています");
+            }
           }
         }
         body.push({
@@ -477,56 +476,109 @@ export class DNCL3 {
             type: "CallExpression",
             callee: {
               type: "Identifier",
-              name: token.name,
+              name: "print",
             },
-            arguments: params,
+            arguments: res,
           },
         });
-      } else { // var
-        this.backToken(chk);
-        let token2 = token;
-        const res = [];
-        for (;;) {
-          const left = this.getVar(token2.name);
-          const op = this.getToken();
-          if (op.type != "operator" || op.operator != "=") throw new Error("代入は変数の後に = で続ける必要があります");
-          const right = this.getExpression();
-          res.push({
-            type: "AssignmentExpression",
-            operator: "=",
-            left,
-            right,
-          });
-          //if (isConstantName(token2.name) && this.vars[token2.name] !== undefined) throw new Error("定数には再代入できません");
-          //this.vars[token2.name] = val;
+      } else {
 
-          const op2 = this.getToken();
-          if (op2.type == "eol" || op2.type == "eof") {
-            this.backToken(op2);
-            break;
+        // [var] = [expression]
+        // [var] <- [expression]
+        // [var][idx] <= [expression]
+        // [function]([params])
+        // x [function] [params] // paramsで括弧付きのものがあると破天
+        const chk = this.getToken();
+        if (chk.type == "(") { // function
+          const params = [];
+          const chk = this.getToken();
+          if (chk.type != ")") {
+            this.backToken(chk);
+            for (;;) {
+              params.push(this.getExpression());
+              const cma = this.getToken();
+              if (cma.type == ")") break;
+              if (cma.type != "operator" && cma.operator != ",") {
+                //throw new Error("引数の区切り , が必要です");
+                throw new Error(`function call arguments must separete by ","`);
+              }
+            }
           }
-          if (op2.operator != ",") {
-            //throw new Error("代入はコンマ区切りのみ対応しています");
-            this.backToken(op2);
-            break;
-          }
-          token2 = this.getToken();
-          if (token2.type != "var") throw new Error("コンマ区切りで続けられるのは代入文のみです");
-        }
-        if (res.length == 1) {
-          body.push({
-            type: "ExpressionStatement",
-            expression: res[0],
-          });
-        } else {
           body.push({
             type: "ExpressionStatement",
             expression: {
-              type: "SequenceExpression",
-              expressions: res,
-            }
+              type: "CallExpression",
+              callee: {
+                type: "Identifier",
+                name: token.name,
+              },
+              arguments: params,
+            },
           });
-        }
+        } else { // var
+          this.backToken(chk);
+          let token2 = token;
+          const res = [];
+          for (;;) {
+            const left = this.parseVar(token2.name);
+
+            const c = this.getCharNotWhite();
+            if (c == "=" || c == "<") {
+              if (c == "<") {
+                const c2 = this.getChar();
+                if (c2 != "-") {
+                  throw new Error("代入は変数の後に <- または = が必要です");
+                }
+              }
+            }
+            /*
+            const op = this.getToken();
+            if (op.type != "operator" || op.operator != "=") {
+              //throw new Error("代入は変数の後に = で続ける必要があります");
+              throw new Error(`assign operation must have "="`);
+            }
+            */
+            const right = this.getExpression();
+            res.push({
+              type: "AssignmentExpression",
+              operator: "=",
+              left,
+              right,
+            });
+            //if (isConstantName(token2.name) && this.vars[token2.name] !== undefined) throw new Error("定数には再代入できません");
+            //this.vars[token2.name] = val;
+
+            const op2 = this.getToken();
+            if (op2.type == "eol" || op2.type == "eof") {
+              this.backToken(op2);
+              break;
+            }
+            if (op2.operator != ",") {
+              //throw new Error("代入はコンマ区切りのみ対応しています");
+              this.backToken(op2);
+              break;
+            }
+            token2 = this.getToken();
+            if (token2.type != "var") {
+              //throw new Error("コンマ区切りで続けられるのは代入文のみです");
+              throw new Error("only assign operation after comma");
+            }
+          }
+          if (res.length == 1) {
+            body.push({
+              type: "ExpressionStatement",
+              expression: res[0],
+            });
+          } else {
+            body.push({
+              type: "ExpressionStatement",
+              expression: {
+                type: "SequenceExpression",
+                expressions: res,
+              }
+            });
+          }
+        }  
       }
     } else if (token.type == "if") {
       const cond = this.getCondition();
