@@ -327,13 +327,13 @@ export class DNCL3 {
     }
     //const v2 = this.getValue();
     const v2 = this.getExpression();
-    if (["==", "!=", ">", "<", ">=", ">=", "<="].indexOf(op.operator) == -1) {
+    if (["=", "==", "!=", ">", "<", ">=", ">=", "<="].indexOf(op.operator) == -1) {
       throw new Error("条件式で未対応の演算子です : " + op.operator);
     }
     return {
       type: "BinaryExpression",
       left: v1,
-      operator: op.operator,
+      operator: op.operator == "=" ? "==" : op.operator,
       right: v2,
     };
   }
