@@ -1,5 +1,3 @@
-const MAX_LOOP = 1000;
-
 const isUpperAlphabet = (c) => "ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(c) >= 0;
 
 const isConstantName = (s) => {
@@ -52,6 +50,13 @@ class Scope {
       }
     }
     this.vars[name] = o;
+  }
+  getLevel() {
+    let res = 0;
+    for (let scope = this; scope; scope = scope.parent) {
+      res++;
+    }
+    return res;
   }
 }
 
@@ -108,6 +113,7 @@ export class Runtime {
             scope2.setVar(localvarname, await this.calcExpression(ast.arguments[i], scope), true);
           }
           try {
+            this.checkMaxCall(name);
             await this.runBlock(func.body, scope2);
             //throw new Error("関数が値を返しませんでした");
           } catch (e) {
@@ -138,9 +144,7 @@ export class Runtime {
             const cond = await this.calcExpression(cmd.test, scope);
             if (!cond) break;
             await this.runBlock(cmd.body, scope);
-            if (i >= MAX_LOOP) {
-              throw new Error(MAX_LOOP + "回の繰り返し上限に達しました");
-            }
+            this.checkMaxLoop(i);
           }
         } catch (e) {
           if (!(e instanceof Break)) {
@@ -153,9 +157,7 @@ export class Runtime {
             await this.runBlock(cmd.body, scope);
             const cond = await this.calcExpression(cmd.test, scope);
             if (!cond) break;
-            if (i >= MAX_LOOP) {
-              throw new Error(MAX_LOOP + "回の繰り返し上限に達しました");
-            }
+            this.checkMaxLoop(i);
           }
         } catch (e) {
           if (!(e instanceof Break)) {
@@ -170,9 +172,7 @@ export class Runtime {
             if (!cond) break;
             await this.runBlock(cmd.body, scope);
             await this.runBlock(cmd.update, scope);
-            if (i >= MAX_LOOP) {
-              throw new Error(MAX_LOOP + "回の繰り返し上限に達しました");
-            }
+            this.checkMaxLoop(i);
           }
         } catch (e) {
           if (!(e instanceof Break)) {
@@ -202,7 +202,27 @@ export class Runtime {
       }
     }
   }
-  async run() {
+  checkMaxLoop(i) {
+    if (!this.maxloop) return;
+    if (i >= this.maxloop) {
+      throw new Error(this.maxloop + "回の繰り返し上限に達しました");
+    }
+  }
+  checkMaxCall(funcname) {
+    if (!this.maxloop) return;
+    if (this.callcount[funcname] == undefined) {
+      this.callcount[funcname] = 1;
+    } else {
+      this.callcount[funcname]++;
+    }
+    if (this.callcount[funcname] >= this.maxloop) {
+      throw new Error(funcname + "の呼び出し回数が、" + this.maxloop + "回の繰り返し上限に達しました");
+    }
+  }
+  async run(maxloop) {
+    this.maxloop = parseInt(maxloop);
+    if (isNaN(this.maxloop)) throw new Error("maxloopが不正です");
+    this.callcount = {};
     this.scope = new Scope();
     const vars = this.scope.vars;
     vars.print = async (...args) => {
@@ -335,11 +355,13 @@ export class Runtime {
           throw new Error("引数の数が合っていません");
         }
         const scope2 = new Scope(scope);
+        //console.log(scope2.getLevel());
         for (let i = 0; i < ast.arguments.length; i++) {
           const localvarname = func.params[i].name;
           scope2.setVar(localvarname, await this.calcExpression(ast.arguments[i], scope), true);
         }
         try {
+          this.checkMaxCall(name);
           await this.runBlock(func.body, scope2);
           throw new Error("関数が値を返しませんでした");
         } catch (e) {

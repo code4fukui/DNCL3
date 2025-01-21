@@ -904,9 +904,9 @@ export class DNCL3 {
       if (c.type == "eof") break;
     }
   }
-  run() {
+  run(maxloop) {
     this.runtime = new Runtime(this.ast, this.callbackoutput, this.callbackinput);
-    return this.runtime.run();
+    return this.runtime.run(maxloop);
   }
   getVars() {
     return this.runtime.getVars();
