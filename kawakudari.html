@@ -1,0 +1,18 @@
+<script type="module" src="./web.js"></script>
+<script type="text/dncl">
+function cls, lc, print, wait, btn, rnd, scr from "https://js.sabae.cc/ij.js"
+
+cls()
+x = 15
+while 1 {
+  lc(x, 5)
+  print("O")
+  lc(rnd(32), 23)
+  print("X")
+  wait(3)
+  x = x - btn(28) + btn(29)
+  if scr(x, 5) {
+    break
+  }
+}
+</script>
