@@ -707,8 +707,17 @@ export class DNCL3 {
     } else if (token.type == "for") {
       const varname = this.getToken();
       if (varname.type != "var") throw new Error("for文の後は変数名が必要です");
-      const eq = this.getToken();
-      if (eq.operator != "=") throw new Error("for文の変数名の後は = が必要です");
+      //const eq = this.getToken();
+      //if (eq.operator != "=") throw new Error("for文の変数名の後は = が必要です");
+      const c = this.getCharNotWhite();
+      if (c == "=" || c == "<") {
+        if (c == "<") {
+          const c2 = this.getChar();
+          if (c2 != "-") {
+            throw new Error("for文の変数名の後に <- または = が必要です");
+          }
+        }
+      }
       const initval = this.getExpression();
       const to = this.getToken();
       if (to.type != "to") throw new Error("for文の初期変数設定の後は to が必要です");
