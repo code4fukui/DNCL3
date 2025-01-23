@@ -11,7 +11,7 @@ sum <- 0
 for i <- 1 to 10 {
   sum <- sum + i
 }
-print i
+print sum
 </script>
 ```
 
