@@ -630,7 +630,9 @@ export class Parser {
               //throw new Error("if must have endif, else or elseif");
               throw new Error("if には endif、else、elseif のいずれかが必要です");
             }
-            this.backToken(endblacket);
+            if (endblacket.type != "endif") {
+              this.backToken(endblacket);
+            }
             break;
           }
         }
