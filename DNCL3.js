@@ -12,9 +12,9 @@ export class DNCL3 {
   parseTokens(s) {
     return this.parser.parseTokens(s);
   }
-  run(maxloop) {
+  run(maxloop, signal) {
     this.runtime = new Runtime(this.ast, this.callbackoutput, this.callbackinput);
-    return this.runtime.run(maxloop);
+    return this.runtime.run(maxloop, signal);
   }
   getVars() {
     return this.runtime.getVars();

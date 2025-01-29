@@ -6,6 +6,7 @@
 サンプル <select id=selexamples></select>
 <label><input type=checkbox id=chkvar checked>変数表示</label>
 <label><input type=checkbox id=chkmaxloop checked>繰り返し上限 <input id=inmaxloop value=1000></label>
+<button id=btnstop>STOP</button>
 <main>
 <div class=diveditor id=divprog></div>
 <div class=diveditor id=divrun></div>
@@ -91,10 +92,15 @@ const removeStartEnd = (json) => {
   }
 };
 
-let bkval = null;
 let running = false;
+let abortctrl = null;
 const onchange = async () => {
-  if (running) return;
+  console.log("onchange", performance.now())
+  if (running) {
+    //abortctrl.abort();
+    return;
+  }
+  abortctrl = new AbortController();
   running = true;
   const src = prog.getValue();
   run.setValue("");
@@ -104,7 +110,10 @@ const onchange = async () => {
       run.setValue(run.getValue() + s + "\n");
     });
     const maxloop = chkmaxloop.checked ? inmaxloop.value : 0;
-    await dncl.run(maxloop);
+    btnstop.onclick = () => {
+      abortctrl.abort();
+    };
+    await dncl.run(maxloop, abortctrl.signal);
     if (chkvar.checked) {
       run.setValue(run.getValue() + "\nvars " + JSON.stringify(dncl.getVars(), null, 2) + "\n");
     }
@@ -113,15 +122,16 @@ const onchange = async () => {
     //ast.setValue(JSON.stringify(e, null, 2));
     run.setValue(run.getValue() + e.toString() + "\n");
   }
-  bkval = src;
   running = false;
 };
 
 //prog.onDidChangeModelContent = onchange; // なぜか初回のみ
+let bkval = null;
 setInterval(() => {
   const txt = prog.getValue();
   if (bkval == txt) return;
   onchange();
+  bkval = txt;
 }, 500);
 
 const data = await CSV.fetchJSON("examples.csv");

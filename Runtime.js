@@ -1,3 +1,6 @@
+//import { sleep } from "https://js.sabae.cc/sleep.js";
+import { sleep } from "./sleep.js";
+
 const DEFAULT_MAX_LOOP = 1000;
 
 const isUpperAlphabet = (c) => "ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(c) >= 0;
@@ -67,6 +70,7 @@ export class Runtime {
     this.callbackoutput = callbackoutput;
     this.callbackinput = callbackinput;
     this.ast = ast;
+    this.pc = 0;
   }
   async getArrayIndex(ast, scope) {
     const prop = await this.calcExpression(ast, scope);
@@ -80,6 +84,10 @@ export class Runtime {
       ast.type == "Program" ? ast.body :
       ast.type == "SequenceExpression" ? ast.expressions : [ast];
     for (const cmd of body) {
+      this.checkAbort();
+      if (this.pc++ % 100 == 0) {
+        await sleep(1, this.signal);
+      }
       //console.log(cmd)
       if (cmd.type == "ExpressionStatement") {
         await this.runBlock(cmd.expression, scope);
@@ -221,8 +229,15 @@ export class Runtime {
       throw new Error(funcname + "の呼び出し回数が、" + this.maxloop + "回の繰り返し上限に達しました");
     }
   }
-  async run(maxloop = DEFAULT_MAX_LOOP) {
+  checkAbort() {
+    //console.log(this.signal?.aborted);
+    if (this.signal?.aborted) {
+      throw new Error("abort: ", this.signal.reason);
+    }
+  }
+  async run(maxloop = DEFAULT_MAX_LOOP, signal = null) {
     this.maxloop = parseInt(maxloop);
+    this.signal = signal;
     if (isNaN(this.maxloop)) throw new Error("maxloopが不正です");
     this.callcount = {};
     this.scope = new Scope();
