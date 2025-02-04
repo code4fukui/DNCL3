@@ -99,11 +99,41 @@ export class Runtime {
         if (cmd.left.type == "Identifier") {
           scope.setVar(name, await this.calcExpression(cmd.right, scope));
         } else if (cmd.left.type == "MemberExpression") {
-          if (!scope.isDefined(name)) {
-            scope.setVar(name, []);
+          const idxes = [];
+          let ast = cmd.left;
+          for (;;) {
+            if (ast.type == "MemberExpression") {
+              idxes.push(await this.calcExpression(ast.property));
+              ast = ast.object;
+            } else if (ast.type == "Identifier") {
+              const name = ast.name;
+              if (!scope.isDefined(name)) {
+                scope.setVar(name, []);
+              }
+              const v = scope.getVar(name);
+              if (idxes.length == 0) {
+                return v;
+              } else if (idxes.length == 1 && typeof v == "string") {
+                const idx = idexes[0];
+                if (idx >= 0 && idx < v.length) {
+                  return v[idx];
+                } else {
+                  return "";
+                }
+              }
+              const val = await this.calcExpression(cmd.right, scope);
+              if (idxes.length == 1) {
+                v[idxes[0]] = val;
+              } else {
+                let ret = v[idxes[idxes.length - 1]];
+                for (let i = idxes.length - 2; i > 0; i--) {
+                  ret = ret[idxes[i]];
+                }
+                ret[idxes[0]] = val;
+              }
+              break;
+            } else throw new Error("非対応の type です " + ast.type);
           }
-          const idx = await this.getArrayIndex(cmd.left.property, scope);
-          scope.getVar(name)[idx] = await this.calcExpression(cmd.right, scope);
         } else {
           throw new Error("非対応の type です " + cmd.left.type);
         }
@@ -283,17 +313,33 @@ export class Runtime {
       }
       return scope.getVar(ast.name);
     } else if (ast.type == "MemberExpression") {
-      const name = this.getVarName(ast);
-      if (!scope.isDefined(name)) {
-        throw new Error("初期化されていない配列 " + name + " が使われました");
-      }
-      const idx = await this.getArrayIndex(ast.property, scope);
-      const v = scope.getVar(name);
-      if (typeof v == "string") {
-        if (idx >= 0 && idx < v.length) return v[idx];
-        return "";
-      } else {
-        return v[idx];
+      const idxes = [];
+      for (;;) {
+        if (ast.type == "MemberExpression") {
+          idxes.push(await this.calcExpression(ast.property));
+          ast = ast.object;
+        } else if (ast.type == "Identifier") {
+          const name = ast.name;
+          if (!scope.isDefined(name)) {
+            throw new Error("初期化されていない配列 " + name + " が使われました");
+          }
+          const v = scope.getVar(name);
+          if (idxes.length == 0) {
+            return v;
+          } else if (idxes.length == 1 && typeof v == "string") {
+            const idx = idexes[0];
+            if (idx >= 0 && idx < v.length) {
+              return v[idx];
+            } else {
+              return "";
+            }
+          }
+          let ret = v[idxes[idxes.length - 1]];
+          for (let i = idxes.length - 2; i >= 0; i--) {
+            ret = ret[idxes[i]];
+          }
+          return ret;
+        } else throw new Error("非対応の type です " + ast.type);
       }
     } else if (ast.type == "UnaryExpression") {
       const n = await this.calcExpression(ast.argument, scope);
