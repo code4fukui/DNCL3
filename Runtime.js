@@ -478,6 +478,7 @@ export class Runtime {
     const res = {};
     for (const name in vars) {
       const o = vars[name];
+      if (name == "print" || name == "input") continue;
       if (typeof o == "object" && o.type == "FunctionDeclaration") {
         res[name] = "[function]";
       } else if (typeof o == "function") {
