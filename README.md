@@ -22,9 +22,6 @@ deno -A https://code4fukui.github.io/DNCL3/cli.js examples/bmi.dncl
 
 - DNCL3実装デバッグ環境 [dncl2js](https://code4fukui.github.io/DNCL3/dncl2js.html)
 
-※ TODO: 下記は未実装です
-- [配列のすべてを初期化](https://github.com/code4fukui/DNCL3/issues/3)
-
 ## 1 変数と値
 
 変数名は、英字で始まる英数字と「_」や日本語の並びです。ただし、予約語（print, input, and, or, not, if, else, while, do, until, for, to, step, break, function, return）は変数名として使用できません。
@@ -70,9 +67,9 @@ print s[0],s[2] # A C と表示される
 - 例: n <- 3
 - 例: points[4] <- 100
 
-使用されている配列の要素に同じ値をまとめて代入することができます。（[未実装です](https://github.com/code4fukui/DNCL3/issues/3)）
+変数への代入後に配列として使うと、配列の各要素の初期値として使用することができます。
 
-- 例: points <- 0
+- 例: points <- 0 (代入後、points[1]を表示すると「0」と表示されます。)
 
 「[」「]」と「,」を使用し、要素のの値をまとめて指定することで、置き換えることができます。
 

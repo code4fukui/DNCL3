@@ -33,3 +33,9 @@ Deno.test("array assign", async () => {
   t.assertEquals(await run("a[0] = 1\nprint a[0]"), ["1"]); // 1D array
   t.assertEquals(await run("a = [[1, 2, 3], [10, 20, 30]]\na[0][0] = 100\nprint a[0][0]"), ["100"]);
 });
+Deno.test("array default value", async () => {
+  t.assertEquals(await run("a <- 1\nprint a[0]"), ["1"]); // 1D array
+  t.assertEquals(await run("a <- 1\nprint a[0][3]"), ["1"]); // 2D array
+  t.assertEquals(await run("a <- 1\nprint a[0][3][5]"), ["1"]); // 3D array
+  t.assertEquals(await run("a <- 1\nprint a[0][3][5][6]"), ["1"]); // 3D array
+});

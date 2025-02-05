@@ -45,6 +45,14 @@ class Scope {
     }
     throw new Error("定義されていない変数 " + name + " が使われました");
   }
+  getVarArray(name) {
+    const v = this.getVar(name);
+    if (Array.isArray(v)) return v;
+    const v2 = new Array();
+    v2.defaultValue = v;
+    this.setVar(name, v2);
+    return v2;
+  }
   setVar(name, o, forcelocal = false) {
     if (!forcelocal) {
       for (let scope = this; scope; scope = scope.parent) {
@@ -103,14 +111,14 @@ export class Runtime {
           let ast = cmd.left;
           for (;;) {
             if (ast.type == "MemberExpression") {
-              idxes.push(await this.calcExpression(ast.property, scope));
+              idxes.unshift(await this.calcExpression(ast.property, scope));
               ast = ast.object;
             } else if (ast.type == "Identifier") {
               const name = ast.name;
               if (!scope.isDefined(name)) {
                 scope.setVar(name, []);
               }
-              const v = scope.getVar(name);
+              const v = scope.getVarArray(name);
               if (idxes.length == 0) {
                 return v;
               } else if (idxes.length == 1 && typeof v == "string") {
@@ -125,11 +133,19 @@ export class Runtime {
               if (idxes.length == 1) {
                 v[idxes[0]] = val;
               } else {
-                let ret = v[idxes[idxes.length - 1]];
-                for (let i = idxes.length - 2; i > 0; i--) {
-                  ret = ret[idxes[i]];
+                const idx = idxes[0];
+                if (v[idx] === undefined) {
+                  v[idx] = [];
                 }
-                ret[idxes[0]] = val;
+                let ret = v[idx];
+                for (let i = 1; i < idxes.length - 1; i++) {
+                  const idx = idxes[i];
+                  if (ret[idx] === undefined) {
+                    ret[idx] = [];
+                  }
+                  ret = ret[idx];
+                }
+                ret[idxes[idxes.length - 1]] = val;
               }
               break;
             } else throw new Error("非対応の type です " + ast.type);
@@ -316,14 +332,14 @@ export class Runtime {
       const idxes = [];
       for (;;) {
         if (ast.type == "MemberExpression") {
-          idxes.push(await this.calcExpression(ast.property, scope));
+          idxes.unshift(await this.calcExpression(ast.property, scope));
           ast = ast.object;
         } else if (ast.type == "Identifier") {
           const name = ast.name;
           if (!scope.isDefined(name)) {
             throw new Error("初期化されていない配列 " + name + " が使われました");
           }
-          const v = scope.getVar(name);
+          const v = scope.getVarArray(name);
           if (idxes.length == 0) {
             return v;
           } else if (idxes.length == 1 && typeof v == "string") {
@@ -334,9 +350,20 @@ export class Runtime {
               return "";
             }
           }
-          let ret = v[idxes[idxes.length - 1]];
-          for (let i = idxes.length - 2; i >= 0; i--) {
-            ret = ret[idxes[i]];
+          const idx = idxes[0];
+          if (v[idx] === undefined) {
+            return v.defaultValue;
+          }
+          let ret = v[idx];
+          for (let i = 1; i < idxes.length; i++) {
+            const idx = idxes[i];
+            if (ret[idx] === undefined) {
+              return v.defaultValue;
+            }
+            ret = ret[idx];
+          }
+          if (ret === undefined) {
+            return v.defaultValue;
           }
           return ret;
         } else throw new Error("非対応の type です " + ast.type);
