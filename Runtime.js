@@ -3,6 +3,11 @@ import { sleep } from "./sleep.js";
 
 const DEFAULT_MAX_LOOP = 1000;
 
+const makeURL = (fn) => {
+  if (!globalThis.location) return fn; // on console
+  return new URL(fn, location.href).href;
+};
+
 const isUpperAlphabet = (c) => "ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(c) >= 0;
 
 const isConstantName = (s) => {
@@ -249,7 +254,7 @@ export class Runtime {
       } else if (cmd.type == "VariableDeclaration") {
         const varnames = cmd.declarations[0].id.properties.map(i => i.key.name);
         const fn = cmd.declarations[0].init.argument.source.value.value;
-        const module = await import(fn);
+        const module = await import(makeURL(fn));
         for (const varname of varnames) {
           scope.setVar(varname, module[varname]);
         }
