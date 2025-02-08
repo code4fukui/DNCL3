@@ -52,6 +52,7 @@ class Scope {
   }
   getVarObject(name) {
     const v = this.getVar(name);
+    if (typeof v == "string") return v;
     if (typeof v == "object") return v;
     const v2 = new Array();
     v2.defaultValue = v;
@@ -129,14 +130,19 @@ export class Runtime {
               }
               const v = scope.getVarObject(name);
               if (idxes.length == 0) {
-                return v;
+                throw new Error("no indexes!?");
+                //return v;
               } else if (idxes.length == 1 && typeof v == "string") {
-                const idx = idexes[0];
+                throw new Error("文字列の要素への代入には未対応です");
+                /*
+                const idx = idxes[0];
+                console.log("set str", v, idx)
                 if (idx >= 0 && idx < v.length) {
                   return v[idx];
                 } else {
                   return "";
                 }
+                */
               }
               const val = await this.calcExpression(cmd.right, scope);
               if (idxes.length == 1) {
@@ -358,7 +364,7 @@ export class Runtime {
           if (idxes.length == 0) {
             return v;
           } else if (idxes.length == 1 && typeof v == "string") {
-            const idx = idexes[0];
+            const idx = idxes[0];
             if (idx >= 0 && idx < v.length) {
               return v[idx];
             } else {
