@@ -116,7 +116,11 @@ export class Runtime {
           let ast = cmd.left;
           for (;;) {
             if (ast.type == "MemberExpression") {
-              idxes.unshift(await this.calcExpression(ast.property, scope));
+              if (ast.property.type == "Identifier") {
+                idxes.unshift(ast.property.name);
+              } else {
+                idxes.unshift(await this.calcExpression(ast.property, scope));
+              }
               ast = ast.object;
             } else if (ast.type == "Identifier") {
               const name = ast.name;
@@ -140,13 +144,15 @@ export class Runtime {
               } else {
                 const idx = idxes[0];
                 if (v[idx] === undefined) {
-                  v[idx] = [];
+                  //console.log("1", typeof idx == "number", idx)
+                  v[idx] = typeof idx == "number" ? [] : {};
                 }
                 let ret = v[idx];
                 for (let i = 1; i < idxes.length - 1; i++) {
                   const idx = idxes[i];
                   if (ret[idx] === undefined) {
-                    ret[idx] = [];
+                    //console.log("2", typeof idx == "number", idx)
+                    ret[idx] = typeof idx == "number" ? [] : {};
                   }
                   ret = ret[idx];
                 }
@@ -337,7 +343,11 @@ export class Runtime {
       const idxes = [];
       for (;;) {
         if (ast.type == "MemberExpression") {
-          idxes.unshift(await this.calcExpression(ast.property, scope));
+          if (ast.property.type == "Identifier") {
+            idxes.unshift(ast.property.name);
+          } else {
+            idxes.unshift(await this.calcExpression(ast.property, scope));
+          }
           ast = ast.object;
         } else if (ast.type == "Identifier") {
           const name = ast.name;

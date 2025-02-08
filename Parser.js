@@ -13,7 +13,8 @@ const reserved_none_blacketmode = [
 ];
 
 const isNumber = (c) => "0123456789".indexOf(c) >= 0;
-const isOperator = (c) => "+-*/%=!<>,.:".indexOf(c) >= 0;
+const isSymbol = (c) => "{}()[].:".indexOf(c) >= 0;
+const isOperator = (c) => "+-*/%=!<>,".indexOf(c) >= 0;
 const isWhite = (c) => " \t\n".indexOf(c) >= 0;
 
 export class Parser {
@@ -93,7 +94,7 @@ export class Parser {
           return { pos, type: "var", name: "print" };
         } else if (c == "#") {
           state = STATE_COMMENT;
-        } else if (c == "{" || c == "}" || c == "(" || c == ")" || c == "[" || c == "]") {
+        } else if (isSymbol(c)) {
           return { pos, type: c };
         } else if (c == '"') {
           state = STATE_STRING;
@@ -108,7 +109,7 @@ export class Parser {
           state = STATE_WORD;
         }
       } else if (state == STATE_WORD) {
-        if (c == " " || c == "\t" || c == "\n" || isOperator(c) || c == "(" || c == ")" || c == "[" || c == "]" || c === undefined) {
+        if (c == " " || c == "\t" || c == "\n" || isOperator(c) || isSymbol(c) || c === undefined) {
           this.p--;
           const w = res.join("");
           if (this.reserved.indexOf(w) >= 0) {
@@ -281,7 +282,7 @@ export class Parser {
         if (t2.type != "var") throw new Error("オブジェクトの定義には名前が必要です");
         const name = t2.name;
         const t4 = this.getToken();
-        if (t4.operator != ":") throw new Error("オブジェクトの定義は名前の後に : が必要です");
+        if (t4.type != ":") throw new Error("オブジェクトの定義は名前の後に : が必要です");
         const value = this.getExpression();
         properties.push({
           type: "Property",
@@ -449,14 +450,23 @@ export class Parser {
 
     const array = [];
     for (;;) {
-      if (op.type != "[") {
+      if (op.type != "[" && op.type != ".") {
         this.backToken(op);
         break;
       }
-      const idx = this.getExpression();
-      const op2 = this.getToken();
-      if (op2.type != "]") throw new Error("配列の要素指定が ] で囲われていません");
-      array.push(idx);
+      if (op.type == "[") {
+        const idx = this.getExpression();
+        const op2 = this.getToken();
+        if (op2.type != "]") throw new Error("配列の要素指定が ] で囲われていません");
+        array.push(idx);
+      } else {
+        const id = this.getToken();
+        if (id.type != "var") throw new Error("オブジェクトの要素指定が名前ではありません");
+        array.push({
+          type: "Identifier",
+          name: id.name,
+        });
+      }
       op = this.getToken();
     }
     if (array.length == 0) {
