@@ -50,9 +50,9 @@ class Scope {
     }
     throw new Error("定義されていない変数 " + name + " が使われました");
   }
-  getVarArray(name) {
+  getVarObject(name) {
     const v = this.getVar(name);
-    if (Array.isArray(v)) return v;
+    if (typeof v == "object") return v;
     const v2 = new Array();
     v2.defaultValue = v;
     this.setVar(name, v2);
@@ -123,7 +123,7 @@ export class Runtime {
               if (!scope.isDefined(name)) {
                 scope.setVar(name, []);
               }
-              const v = scope.getVarArray(name);
+              const v = scope.getVarObject(name);
               if (idxes.length == 0) {
                 return v;
               } else if (idxes.length == 1 && typeof v == "string") {
@@ -344,7 +344,7 @@ export class Runtime {
           if (!scope.isDefined(name)) {
             throw new Error("初期化されていない配列 " + name + " が使われました");
           }
-          const v = scope.getVarArray(name);
+          const v = scope.getVarObject(name);
           if (idxes.length == 0) {
             return v;
           } else if (idxes.length == 1 && typeof v == "string") {
@@ -386,6 +386,12 @@ export class Runtime {
       const res = [];
       for (const i of ast.elements) {
         res.push(await this.calcExpression(i, scope));
+      }
+      return res;
+    } else if (ast.type == "ObjectExpression") {
+      const res = {};
+      for (const i of ast.properties) {
+        res[i.key.name] = await this.calcExpression(i.value, scope);
       }
       return res;
     } else if (ast.type == "BinaryExpression" || ast.type == "LogicalExpression") {

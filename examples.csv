@@ -25,3 +25,4 @@ commontest2025-1_ja.dncl,23. common test 2025 1 (日本語変数)
 commontest2025-2.dncl,24. common test 2025 2
 commontest2025-2_ja.dncl,25. common test 2025 2 (日本語変数)
 import.dncl,26. import functions
+object.dncl,27. オブジェクトの生成

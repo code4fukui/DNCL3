@@ -13,7 +13,7 @@ const reserved_none_blacketmode = [
 ];
 
 const isNumber = (c) => "0123456789".indexOf(c) >= 0;
-const isOperator = (c) => "+-*/%=!<>,".indexOf(c) >= 0;
+const isOperator = (c) => "+-*/%=!<>,.:".indexOf(c) >= 0;
 const isWhite = (c) => " \t\n".indexOf(c) >= 0;
 
 export class Parser {
@@ -271,6 +271,36 @@ export class Parser {
       return {
         type: "ArrayExpression",
         elements,
+      };
+    }
+    if (t1.type == "{") {
+      const properties = [];
+      for (;;) {
+        const t2 = this.getToken();
+        console.log("t2", t2);
+        if (t2.type == "}") break;
+        if (t2.type != "var") throw new Error("オブジェクトの定義には名前が必要です");
+        const name = t2.name;
+        const t4 = this.getToken();
+        console.log("t4", t4);
+        if (t4.operator != ":") throw new Error("オブジェクトの定義は名前の後に : が必要です");
+        const value = this.getExpression();
+        properties.push({
+          type: "Property",
+          key: {
+            type: "Identifier",
+            name,
+          },
+          value,
+        });
+        const t3 = this.getToken();
+        if (t3.type == "}") break;
+        if (t3.type != "operator" && t3.operator != ",") throw new Error("オブジェクトの定義は , で区切る必要があります");
+      }
+      console.log(properties);
+      return {
+        type: "ObjectExpression",
+        properties,
       };
     }
     if (t1.type == "num" || t1.type == "string") {
