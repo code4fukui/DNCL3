@@ -449,6 +449,7 @@ export class Parser {
     let op = this.getToken();
 
     const array = [];
+    const computed = [];
     for (;;) {
       if (op.type != "[" && op.type != ".") {
         this.backToken(op);
@@ -459,6 +460,7 @@ export class Parser {
         const op2 = this.getToken();
         if (op2.type != "]") throw new Error("配列の要素指定が ] で囲われていません");
         array.push(idx);
+        computed.push(true);
       } else {
         const id = this.getToken();
         if (id.type != "var") throw new Error("オブジェクトの要素指定が名前ではありません");
@@ -466,6 +468,7 @@ export class Parser {
           type: "Identifier",
           name: id.name,
         });
+        computed.push(false);
       }
       op = this.getToken();
     }
@@ -482,7 +485,7 @@ export class Parser {
         name: name,
       },
       property: array[0],
-      computed: true,
+      computed: computed[0],
       //optional: false,
     };
     for (let i = 1; i < array.length; i++) {
@@ -490,7 +493,7 @@ export class Parser {
         type: "MemberExpression",
         object: left,
         property: array[i],
-        computed: true,
+        computed: computed[i],
         //optional: false,
       };
     }

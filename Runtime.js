@@ -116,7 +116,7 @@ export class Runtime {
           let ast = cmd.left;
           for (;;) {
             if (ast.type == "MemberExpression") {
-              if (ast.property.type == "Identifier") {
+              if (ast.computed == false) {
                 idxes.unshift(ast.property.name);
               } else {
                 idxes.unshift(await this.calcExpression(ast.property, scope));
@@ -343,7 +343,7 @@ export class Runtime {
       const idxes = [];
       for (;;) {
         if (ast.type == "MemberExpression") {
-          if (ast.property.type == "Identifier") {
+          if (ast.computed == false) {
             idxes.unshift(ast.property.name);
           } else {
             idxes.unshift(await this.calcExpression(ast.property, scope));
