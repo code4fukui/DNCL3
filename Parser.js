@@ -689,7 +689,10 @@ export class Parser {
             type: "BlockStatement",
             body: then,
           },
-          alternate: bodyelse[0],
+          alternate: {
+            type: "BlockStatement",
+            body: bodyelse,
+          },
         });
       } else if (telse.type == "else") {
         if (this.blacketmode) {
@@ -705,7 +708,10 @@ export class Parser {
                 type: "BlockStatement",
                 body: then,
               },
-              alternate: bodyelse[0],
+              alternate: {
+                type: "BlockStatement",
+                body: bodyelse,
+              }
             });        
             return true;
           }
