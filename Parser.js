@@ -501,7 +501,7 @@ export class Parser {
   }
   parseCommand(body, forcetoken) {
     const token = forcetoken || this.getToken();
-    //console.log("parseCommand", token);
+    //console.log("parseCommand", token, "forcetoken", forcetoken);
     if (token.type == "eof") return false;
     if (this.blacketmode) {
       if (token.type == "}") {
@@ -655,45 +655,73 @@ export class Parser {
           //throw new Error(`missing "{" after if`);
         }
       }
-      const then = [];
-      for (;;) {
-        if (!this.parseCommand(then)) {
-          const endblacket = this.getToken();
-          if (this.blacketmode) {
-            if (endblacket.type != "}") {
-              throw new Error(`"}"で閉じられていません`);
-              //throw new Error(`missing "}"`);
-            }
-            break;
-          } else {
-            if (endblacket.type != "endif" && endblacket.type != "else" && endblacket.type != "elseif") {
-              //throw new Error("if must have endif, else or elseif");
-              throw new Error("if には endif、else、elseif のいずれかが必要です");
-            }
-            if (endblacket.type != "endif") {
+      const parseIfBlock = (firsttoken) => {
+        const body = [];
+        for (;;) {
+          if (!this.parseCommand(body, firsttoken)) {
+            const endblacket = this.getToken();
+            if (this.blacketmode) {
+              if (endblacket.type != "}") {
+                throw new Error(`"}"で閉じられていません`);
+                //throw new Error(`missing "}"`);
+              }
+              break;
+            } else {
+              if (endblacket.type != "endif" && endblacket.type != "else" && endblacket.type != "elseif") {
+                //throw new Error("if must have endif, else or elseif");
+                throw new Error("if には endif、else、elseif のいずれかが必要です");
+              }
               this.backToken(endblacket);
+              break;
             }
-            break;
           }
+          firsttoken = null;
         }
-      }
+        return body;
+      };
+      const then = parseIfBlock();
+      //console.log("THEN", then)
       const telse = this.getToken();
       if (telse.type == "elseif") {
-        const bodyelse = [];
-        const forcetoken = { type: "if" };
-        this.parseCommand(bodyelse, forcetoken);
-        body.push({
+        const makeif = (cond, con) => ({
           type: "IfStatement",
           test: cond,
           consequent: {
             type: "BlockStatement",
-            body: then,
+            body: con,
           },
-          alternate: {
-            type: "BlockStatement",
-            body: bodyelse,
-          },
+          alternate: null,
         });
+        const elif = makeif(cond, then);
+        let cur = elif;
+        for (;;) {
+          const cond = this.getCondition();
+          const block = parseIfBlock();
+          cur.alternate = makeif(cond, block);
+          cur = cur.alternate;
+          const next = this.getToken();
+          if (next.type == "endif") {
+            break;
+          } else if (next.type == "else") {
+            const block = parseIfBlock();
+            cur.alternate = { type: "BlockStatement", body: block };
+            const next2 = this.getToken();
+            if (next2.type != "endif") throw new Error("endifが見つかりません");
+            break;
+          } else if (next.type == "elseif") {
+            continue;
+          } else {
+            throw new Error("不正なtokenです");
+          }
+        }
+
+        //console.log("BODYELSE", bodyelse)
+        body.push(elif);
+        //const telse2 = this.getToken();
+        //console.log(JSON.stringify(elif, null, 2));
+        //console.log(telse2, JSON.stringify(bodyelse, null, 2));
+        //if (telse2.type != "endif") throw new Error(`endifがありません`);
+        return true;
       } else if (telse.type == "else") {
         if (this.blacketmode) {
           const telse2 = this.getToken();
@@ -708,10 +736,7 @@ export class Parser {
                 type: "BlockStatement",
                 body: then,
               },
-              alternate: {
-                type: "BlockStatement",
-                body: bodyelse,
-              }
+              alternate: bodyelse[0],
             });        
             return true;
           }
@@ -749,7 +774,11 @@ export class Parser {
           },
         });        
       } else {
-        this.backToken(telse);
+        if (!this.blacketmode) {
+          if (telse.type != "endif") throw new Error("endifが必要です");
+        } else {
+          this.backToken(telse);
+        }
         body.push({
           type: "IfStatement",
           test: cond,

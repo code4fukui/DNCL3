@@ -6,6 +6,7 @@
 サンプル <select id=selexamples></select>
 <label><input type=checkbox id=chkvar checked>変数表示</label>
 <label><input type=checkbox id=chkmaxloop checked>繰り返し上限 <input id=inmaxloop value=1000></label>
+<label><input type=checkbox id=chkblacket checked>ブロック括弧表記</label>
 <button id=btnstop>STOP</button>
 <main>
 <div class=diveditor id=divprog></div>
@@ -106,9 +107,10 @@ const onchange = async () => {
   run.setValue("");
   run.revealLine(1);
   try {
+    const blacketmode = chkblacket.checked;
     const dncl = new DNCL3(src, (s) => {
       run.setValue(run.getValue() + s + "\n");
-    });
+    }, null, blacketmode);
     const maxloop = chkmaxloop.checked ? inmaxloop.value : 0;
     btnstop.onclick = () => {
       abortctrl.abort();
@@ -153,7 +155,7 @@ const fn0 = location.hash.substring(1) || fn;
 selexamples.value = fn0;
 selexamples.oninput();
 
-chkvar.oninput = chkmaxloop.oninput = inmaxloop.oninput = () => onchange();
+chkvar.oninput = chkmaxloop.oninput = inmaxloop.oninput = chkblacket.oninput = () => onchange();
 </script>
 
 </body></html>
