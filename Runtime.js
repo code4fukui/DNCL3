@@ -1,5 +1,6 @@
 //import { sleep } from "https://js.sabae.cc/sleep.js";
 import { sleep } from "./sleep.js";
+import { checkFloat } from "./checkFloat.js";
 
 const DEFAULT_MAX_LOOP = 1000;
 
@@ -316,9 +317,8 @@ export class Runtime {
     vars.input = async (s) => {
       const toint = (s) => {
         if (s == null) return "";
-        const f = parseFloat(s);
-        if (!isNaN(f) && f.toString() == s) return f;
-        return s;
+        if (!checkFloat(s)) return s;
+        return parseFloat(s);
       };
       if (this.callbackinput) {
         return toint(await this.callbackinput(s));
