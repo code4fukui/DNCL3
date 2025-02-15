@@ -6,14 +6,14 @@
 サンプル <select id=selexamples></select>
 <label><input type=checkbox id=chkvar checked>変数表示</label>
 <label><input type=checkbox id=chkmaxloop checked>繰り返し上限 <input id=inmaxloop value=1000></label>
-<label><input type=checkbox id=chkblacket checked>ブロック括弧表記</label>
+<label><input type=checkbox id=chkwirth>Wirth(非ブロック括弧表記)</label>
 <button id=btnstop>STOP</button>
 <main>
 <div class=diveditor id=divprog></div>
 <div class=diveditor id=divrun></div>
 </main>
 
-<a href=https://github.com/code4fukui/DNCL3/blob/main/README.md>DNCL3言語仕様</a> <a href=https://github.com/code4fukui/DNCL3/>src on GitHub</a>
+<a href=https://github.com/code4fukui/DNCL3/blob/main/README.md>DNCL3言語仕様</a> / <a href=https://github.com/code4fukui/Wirth/blob/main/README_ja.md>Wirth言語仕様</a> <a href=https://github.com/code4fukui/DNCL3/>src on GitHub</a>
 
 <style>
 body {
@@ -107,7 +107,7 @@ const onchange = async () => {
   run.setValue("");
   run.revealLine(1);
   try {
-    const blacketmode = chkblacket.checked;
+    const blacketmode = !chkwirth.checked;
     const dncl = new DNCL3(src, (s) => {
       run.setValue(run.getValue() + s + "\n");
     }, null, blacketmode);
@@ -155,7 +155,7 @@ const fn0 = location.hash.substring(1) || fn;
 selexamples.value = fn0;
 selexamples.oninput();
 
-chkvar.oninput = chkmaxloop.oninput = inmaxloop.oninput = chkblacket.oninput = () => onchange();
+chkvar.oninput = chkmaxloop.oninput = inmaxloop.oninput = chkwirth.oninput = () => onchange();
 </script>
 
 </body></html>
