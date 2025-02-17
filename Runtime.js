@@ -5,7 +5,12 @@ import { checkFloat } from "./checkFloat.js";
 const DEFAULT_MAX_LOOP = 1000;
 
 const makeURL = (fn) => {
-  if (!globalThis.location) return fn; // on console
+  if (globalThis.Deno) {
+    if (fn.startsWith("./")) {
+      fn = fn.substring(2);
+    }
+    return Deno.cwd() + "/" + fn; // on Deno console
+  }
   return new URL(fn, location.href).href;
 };
 
