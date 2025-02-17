@@ -368,7 +368,9 @@ export class Runtime {
             return v;
           } else if (idxes.length == 1 && typeof v == "string") {
             const idx = idxes[0];
-            if (idx >= 0 && idx < v.length) {
+            if (idx == "length") {
+              return v.length;
+            } else if (idx >= 0 && idx < v.length) {
               return v[idx];
             } else {
               return "";
