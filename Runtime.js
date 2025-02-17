@@ -9,7 +9,7 @@ const makeURL = (fn) => {
     if (fn.startsWith("./")) {
       fn = fn.substring(2);
     }
-    return Deno.cwd() + "/" + fn; // on Deno console
+    return "file://" + Deno.cwd() + "/" + fn; // on Deno console
   }
   return new URL(fn, location.href).href;
 };
