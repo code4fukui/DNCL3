@@ -1,6 +1,7 @@
 //import { sleep } from "https://js.sabae.cc/sleep.js";
 import { sleep } from "./sleep.js";
 import { checkFloat } from "./checkFloat.js";
+import { obj2s } from "./obj2s.js";
 
 const DEFAULT_MAX_LOOP = 1000;
 
@@ -309,7 +310,7 @@ export class Runtime {
     this.scope = new Scope();
     const vars = this.scope.vars;
     vars.print = async (...args) => {
-      const s = args.join(" ");
+      const s = args.map(i => obj2s(i)).join(" ");
       if (this.callbackoutput) {
         await this.callbackoutput(s);
       } else {
@@ -513,9 +514,15 @@ export class Runtime {
       } else if (typeof o == "function") {
         res[name] = "[function in js]";
       } else {
-        res[name] = o;
+        res[name] = obj2s(o, false);
       }
     }
-    return res;
+    const res2 = [];
+    res2.push("vars {");
+    for (const name in res) {
+      res2.push("  " + name + ": " + res[name] + ",");
+    }
+    res2.push("}");
+    return res2.join("\n");
   }
 }
