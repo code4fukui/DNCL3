@@ -1072,10 +1072,18 @@ export class Parser {
         }
       });
     } else if (token.type == "return") {
-      body.push({
-        type: "ReturnStatement",
-        argument: this.getExpression(),
-      });
+      const chk = this.getToken(true);
+      this.backToken(chk);
+      if (chk.type == "eol" || chk.type == "eof") {
+        body.push({
+          type: "ReturnStatement",
+        });
+      } else {
+        body.push({
+          type: "ReturnStatement",
+          argument: this.getExpression(),
+        });
+      }
     } else if (token.type == "break") {
       body.push({
         type: "BreakStatement",

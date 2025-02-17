@@ -263,8 +263,12 @@ export class Runtime {
         }
         scope.setVar(name, cmd);
       } else if (cmd.type == "ReturnStatement") {
-        const val = await this.calcExpression(cmd.argument, scope);
-        throw new Return(val);
+        if (cmd.argument !== undefined) {
+          const val = await this.calcExpression(cmd.argument, scope);
+          throw new Return(val);
+        } else {
+          throw new Return();
+        }
       } else if (cmd.type == "BreakStatement") {
         throw new Break();
       } else if (cmd.type == "VariableDeclaration") {
@@ -488,7 +492,9 @@ export class Runtime {
           throw new Error("関数が値を返しませんでした");
         } catch (e) {
           if (e instanceof Return) {
-            return e.getValue();
+            const val = e.getValue();
+            if (val === undefined) throw new Error("関数が値を返しませんでした");
+            return val;
           }
           throw e;
         }
