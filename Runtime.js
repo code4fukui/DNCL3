@@ -6,10 +6,7 @@ const DEFAULT_MAX_LOOP = 1000;
 
 const makeURL = (fn) => {
   if (globalThis.Deno) {
-    if (fn.startsWith("./")) {
-      fn = fn.substring(2);
-    }
-    return "file://" + Deno.cwd() + "/" + fn; // on Deno console
+    return "file://" + Deno.realPathSync(fn); // on Deno console
   }
   return new URL(fn, location.href).href;
 };
