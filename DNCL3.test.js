@@ -39,3 +39,24 @@ Deno.test("array default value", async () => {
   t.assertEquals(await run("a <- 1\nprint a[0][3][5]"), ["1"]); // 3D array
   t.assertEquals(await run("a <- 1\nprint a[0][3][5][6]"), ["1"]); // 3D array
 });
+Deno.test("import rnd", async () => {
+  t.assertEquals(await run(`function rnd from "rnd.js"\nprint rnd(1)`), ["0"]);
+});
+Deno.test("import obj", async () => {
+  t.assertEquals(await run(`function obj from "obj.js"\na <- obj(50)\nprint a.a`), ["100"]);
+  t.assertEquals(await run(`
+function obj from "obj.js"
+a <- obj(50)
+a.b()
+`), []);
+  //t.assertEquals(await run(`function obj from "obj.js"\na <- obj(50)\nprint a.b()`), ["[50]"]);
+});
+Deno.test("import obj2", async () => {
+  t.assertEquals(await run(`function obj from "obj.js"\na <- obj(50)\nprint a.a`), ["100"]);
+  t.assertEquals(await run(`
+function obj from "obj.js"
+a <- obj(50)
+print a.b()
+`), ["[50]"]);
+  //t.assertEquals(await run(`function obj from "obj.js"\na <- obj(50)\nprint a.b()`), ["[50]"]);
+});

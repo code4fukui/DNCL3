@@ -252,6 +252,7 @@ export class Parser {
   */
   getValue() {
     const t1 = this.getToken();
+    //console.log("getv", t1)
     if (t1.type == "(") {
       const res = this.getExpression();
       const t2 = this.getToken();
@@ -313,10 +314,11 @@ export class Parser {
         argument: this.getValue(),
       };
     } else if (t1.type == "var") {
+      const varobj = this.parseVar(t1.name);
       const chk = this.getToken();
       if (chk.type != "(") {
         this.backToken(chk);
-        return this.parseVar(t1.name);
+        return varobj;
       }
       // function call
       const args = [];
@@ -332,10 +334,7 @@ export class Parser {
       }
       return {
         type: "CallExpression",
-        callee: {
-          type: "Identifier",
-          name: t1.name,
-        },
+        callee: varobj,
         arguments: args,
       };
 
@@ -554,6 +553,8 @@ export class Parser {
         // [var][idx] <= [expression]
         // [function]([params])
         // x [function] [params] // paramsで括弧付きのものがあると破天
+        const var1 = this.parseVar(token.name);
+        //console.log("var1", var1);
         const chk = this.getToken();
         if (chk.type == "(") { // function
           const params = [];
@@ -574,10 +575,7 @@ export class Parser {
             type: "ExpressionStatement",
             expression: {
               type: "CallExpression",
-              callee: {
-                type: "Identifier",
-                name: token.name,
-              },
+              callee: var1,
               arguments: params,
             },
           });
@@ -585,9 +583,8 @@ export class Parser {
           this.backToken(chk);
           let token2 = token;
           const res = [];
+          let left = var1;
           for (;;) {
-            const left = this.parseVar(token2.name);
-
             const c = this.getCharNotWhite();
             if (c == "=" || c == "<") {
               if (c == "<") {
@@ -629,6 +626,7 @@ export class Parser {
               //throw new Error("コンマ区切りで続けられるのは代入文のみです");
               throw new Error("only assign operation after comma");
             }
+            left = this.parseVar(token2.name);
           }
           if (res.length == 1) {
             body.push({

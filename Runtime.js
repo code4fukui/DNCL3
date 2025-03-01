@@ -97,6 +97,29 @@ export class Runtime {
     }
     return prop;
   }
+  getFunc(scope, cmd) {
+    if (cmd.callee.type == "Identifier") {
+      const name = cmd.callee.name;
+      if (!scope.isDefined(name)) {
+        throw new Error("定義されていない関数 " + name + " が使われました");
+      }
+      const func = scope.getVar(name);
+      return { parent: null, name, func };
+    } else if (cmd.callee.type == "MemberExpression") {
+      if (cmd.callee.object.type != "Identifier") throw new Error("未対応です");
+      if (cmd.callee.property.type != "Identifier") throw new Error("未対応です");
+      if (cmd.callee.computed != false) throw new Error("未対応です");
+      const name = cmd.callee.object.name;
+      if (!scope.isDefined(name)) {
+        throw new Error("定義されていない関数 " + name + " が使われました");
+      }
+      const parent = scope.getVar(name);
+      const func = parent[cmd.callee.property.name];
+      return { parent, name, func };
+    } else {
+      throw new Error("サポートしていないtypeです " + cmd.callee.type);
+    }
+  }
   async runBlock(ast, scope) {
     const body = ast.type == "BlockStatement" || 
       ast.type == "Program" ? ast.body :
@@ -175,14 +198,11 @@ export class Runtime {
           throw new Error("非対応の type です " + cmd.left.type);
         }
       } else if (cmd.type == "CallExpression") {
-        const name = cmd.callee.name;
-        if (!scope.isDefined(name)) {
-          throw new Error("定義されていない関数 " + name + " が使われました");
-        }
-        const func = scope.getVar(name);
+        const { parent, name, func } = this.getFunc(scope, cmd);
+        // console.log(cmd.callee);
         if (typeof func == "object") {
           if (ast.arguments.length != func.params.length) {
-            throw new Error("引数の数が合っていません");
+            throw new Error("引数の数が合っていません 機能名: " + name);
           }
           const scope2 = new Scope(scope);
           for (let i = 0; i < ast.arguments.length; i++) {
@@ -204,7 +224,8 @@ export class Runtime {
           for (let i = 0; i < ast.arguments.length; i++) {
             params.push(await this.calcExpression(ast.arguments[i], scope));
           }
-          await func(...params);
+          //await func(...params);
+          await func.apply(parent, params);
         } else {
           new Error("関数ではないものが関数として呼び出されました")
         }
@@ -458,7 +479,8 @@ export class Runtime {
         throw new Error("対応していない演算子が使われました");
       }
     } else if (ast.type == "CallExpression") {
-      const name = ast.callee.name;
+      const { parent, name, func } = this.getFunc(scope, ast);
+      //const name = ast.callee.name;
       /*
       if (name == "input") {
         if (ast.arguments.length > 1) {
@@ -475,7 +497,7 @@ export class Runtime {
       if (!scope.isDefined(name)) {
         throw new Error("定義されていない関数 " + name + " が使われました");
       }
-      const func = scope.getVar(name);
+      //const func = scope.getVar(name);
       if (typeof func == "object") {
         if (ast.arguments.length != func.params.length) {
           throw new Error("引数の数が合っていません");
@@ -503,7 +525,8 @@ export class Runtime {
         for (let i = 0; i < ast.arguments.length; i++) {
           params.push(await this.calcExpression(ast.arguments[i], scope));
         }
-        return await func(...params);
+        //return await func(...params);
+        return await func.apply(parent, params);
       } else {
         new Error("関数ではないものが関数として呼び出されました")
       }

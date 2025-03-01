@@ -309,3 +309,208 @@ Deno.test("for if", async () => {
     ]
   });
 });
+
+Deno.test("func simple", async () => {
+  t.assertEquals(parse("a()"),   {
+      body: [
+        {
+          type: "ExpressionStatement",
+          expression: {
+            type: "CallExpression",
+            arguments: [],
+            callee: {
+              name: "a",
+              type: "Identifier",
+            },
+          },
+        },
+      ],
+      type: "Program",
+    }
+  );
+});
+Deno.test("func simple in expression", async () => {
+  t.assertEquals(parse("print a()"),   {
+      body: [
+        {
+          type: "ExpressionStatement",
+          expression: {
+            type: "CallExpression",
+            callee: {
+              name: "print",
+              type: "Identifier",
+            },
+            arguments: [
+              {
+                type: "CallExpression",
+                callee: {
+                  name: "a",
+                  type: "Identifier",
+                },
+                arguments: [],
+              },
+            ],
+          },
+        },
+      ],
+      type: "Program",
+    }
+  );
+});
+Deno.test("func obj", async () => {
+  t.assertEquals(parse("a.b()"),   {
+      body: [
+        {
+          type: "ExpressionStatement",
+          expression: {
+            type: "CallExpression",
+            arguments: [],
+            callee: {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "a"
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "b"
+              },
+              computed: false,
+            },
+          },
+        },
+      ],
+      type: "Program",
+    }
+  );
+});
+Deno.test("func obj in expression", async () => {
+  t.assertEquals(parse("print obj.func()"),   {
+      body: [
+        {
+          type: "ExpressionStatement",
+          expression: {
+            type: "CallExpression",
+            callee: {
+              name: "print",
+              type: "Identifier",
+            },
+            arguments: [
+              {
+                type: "CallExpression",
+                callee: {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "obj"
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "func"
+                  },
+                  computed: false,
+                },
+                arguments: [],
+              },
+            ],
+          },
+        },
+      ],
+      type: "Program",
+    }
+  );
+});
+Deno.test("assign simple", async () => {
+  t.assertEquals(parse("a <- 3"),   {
+      body: [
+        {
+          type: "ExpressionStatement",
+          expression: {
+            type: "AssignmentExpression",
+            left: {
+              name: "a",
+              type: "Identifier",
+            },
+            operator: "=",
+            right: {
+              type: "Literal",
+              value: 3,
+            },
+          },
+        },
+      ],
+      type: "Program",
+    }
+  );
+});
+Deno.test("assign multi", async () => {
+  t.assertEquals(parse("a <- 3, b <- 3"),   {
+      body: [
+        {
+          type: "ExpressionStatement",
+          expression: {
+            type: "SequenceExpression",
+            expressions: [
+              {
+                type: "AssignmentExpression",
+                left: {
+                  name: "a",
+                  type: "Identifier",
+                },
+                operator: "=",
+                right: {
+                  type: "Literal",
+                  value: 3,
+                },
+              },
+              {
+                type: "AssignmentExpression",
+                left: {
+                  name: "b",
+                  type: "Identifier",
+                },
+                operator: "=",
+                right: {
+                  type: "Literal",
+                  value: 3,
+                },
+              },
+            ],
+          },
+        },
+      ],
+      type: "Program",
+    }
+  );
+});
+Deno.test("assign obj", async () => {
+  t.assertEquals(parse("a.b <- 3"),   {
+      body: [
+        {
+          type: "ExpressionStatement",
+          expression: {
+            type: "AssignmentExpression",
+            left: {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "a"
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "b"
+              },
+              computed: false,
+            },
+            operator: "=",
+            right: {
+              type: "Literal",
+              value: 3,
+            },
+          },
+        },
+      ],
+      type: "Program",
+    }
+  );
+});
