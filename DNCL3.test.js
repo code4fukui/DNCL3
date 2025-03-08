@@ -46,17 +46,44 @@ Deno.test("import obj", async () => {
   t.assertEquals(await run(`function obj from "obj.js"\na <- obj(50)\nprint a.a`), ["100"]);
   t.assertEquals(await run(`
 function obj from "obj.js"
-a <- obj(50)
-a.b()
-`), []);
-  //t.assertEquals(await run(`function obj from "obj.js"\na <- obj(50)\nprint a.b()`), ["[50]"]);
+i <- obj(50)
+print i.a
+`), ["100"]);
 });
 Deno.test("import obj2", async () => {
   t.assertEquals(await run(`function obj from "obj.js"\na <- obj(50)\nprint a.a`), ["100"]);
   t.assertEquals(await run(`
 function obj from "obj.js"
-a <- obj(50)
-print a.b()
+i <- obj(50)
+c <- i.b()
+print c
 `), ["[50]"]);
-  //t.assertEquals(await run(`function obj from "obj.js"\na <- obj(50)\nprint a.b()`), ["[50]"]);
 });
+Deno.test("import obj3", async () => {
+  t.assertEquals(await run(`function obj from "obj.js"\na <- obj(50)\nprint a.a`), ["100"]);
+  t.assertEquals(await run(`
+function obj2 from "obj.js"
+i <- obj2.create()
+c <- i.getKey()
+print c
+`), ["123"]);
+});
+/*
+function Webembot from "https://code4fukui.github.io/Webembot/Webembot.js"
+
+emb <- Webembot.create()
+c <- emb.getKey()
+print c
+-> ok
+
+function Webembot from "https://code4fukui.github.io/Webembot/Webembot.js"
+function sleep from "https://js.sabae.cc/sleep.js"
+
+emb <- Webembot.create()
+do {
+  c <- emb.getKey()
+  sleep(100)
+} until c != ""
+print c
+-> ok
+*/
