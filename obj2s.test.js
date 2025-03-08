@@ -17,3 +17,12 @@ Deno.test("test", () => {
   t.assertEquals(obj2s("s"), "s");
   t.assertEquals(obj2s({ a: "s", b: 2 }), '{ a: "s", b: 2 }');
 });
+Deno.test("repeat", () => {
+  const o = {
+    a: 100,
+  };
+  o.b = o;
+  const ar = [o, o];
+  t.assertEquals(obj2s(o), "{ a: 100, b: [object 0] }");
+  t.assertEquals(obj2s(ar), "[{ a: 100, b: [object 1] }, [object 1]]");
+});
