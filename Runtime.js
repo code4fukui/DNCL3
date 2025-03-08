@@ -545,7 +545,7 @@ export class Runtime {
       } else if (typeof o == "function") {
         res[name] = "[function in js]";
       } else {
-        res[name] = obj2s(o, false);
+        res[name] = obj2s(o);
       }
     }
     const res2 = [];
