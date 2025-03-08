@@ -4,3 +4,10 @@ export const obj = (n) => {
     b: () => "[" + n + "]",
   };
 };
+export const obj2 = {
+  create: () => {
+    return {
+      getKey: () => 123,
+    };
+  }
+};
