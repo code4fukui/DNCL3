@@ -214,10 +214,9 @@ export class Runtime {
             await this.runBlock(func.body, scope2);
             //throw new Error("関数が値を返しませんでした");
           } catch (e) {
-            if (e instanceof Return) {
-              //return e.getValue();
+            if (!(e instanceof Return)) {
+              throw e;
             }
-            throw e;
           }
         } else if (typeof func == "function") {
           const params = [];
