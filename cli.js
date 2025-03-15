@@ -1,5 +1,17 @@
 import { DNCL3 } from "./DNCL3.js";
 
-const fn = Deno.args[0];
+let blacketmode = true;
+let fn = null;
+for (const a of Deno.args) {
+  if (a.startsWith("-")) {
+    if (a == "--wirth") {
+      blacketmode = false;
+    } else if (a == "--dncl3") {
+      blacketmode = true;
+    }
+  } else {
+    fn = a;
+  }
+}
 const s = await Deno.readTextFile(fn);
-new DNCL3(s).run();
+new DNCL3(s, null, null, blacketmode).run();
