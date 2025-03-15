@@ -5,6 +5,7 @@ const reserved = [
   "while", "do", "until", "for", "to", "step", "break",
   "function", "return", "from",
   "and", "or", "not",
+  "null",
 ];
 const reserved_none_blacketmode = [
   "endif",
@@ -306,6 +307,11 @@ export class Parser {
       return {
         type: "Literal",
         value: t1.value,
+      };
+    } else if (t1.type == "null") {
+      return {
+        type: "Literal",
+        value: null,
       };
     } else if (t1.type == "operator" && t1.operator == "-") {
       return {
