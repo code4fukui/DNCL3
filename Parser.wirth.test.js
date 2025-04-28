@@ -298,3 +298,37 @@ Deno.test("array bug https://github.com/code4fukui/Wirth/issues/18", async () =>
     type: "Program",
   });
 });
+
+Deno.test("func bug", async () => {
+  const testcode = `function insert(list, obj)
+end
+`;
+  t.assertEquals(parse(testcode), {
+  body: [
+    {
+      body: {
+        body: [],
+        type: "BlockStatement",
+      },
+      id: {
+        name: "insert",
+        type: "Identifier",
+      },
+      params: [
+        {
+          name: "list",
+          type: "Identifier",
+        },
+        {
+          name: "obj",
+          type: "Identifier",
+        },
+      ],
+      type: "FunctionDeclaration",
+    },
+  ],
+  type: "Program",
+});
+});
+
+
