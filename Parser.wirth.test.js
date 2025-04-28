@@ -261,3 +261,40 @@ print n1,n2
 `;
   t.assert(parse(testcode) != null);
 });
+
+Deno.test("array bug https://github.com/code4fukui/Wirth/issues/18", async () => {
+  const testcode = `a=[1,-1]`;
+  t.assertEquals(parse(testcode), {
+    body: [
+      {
+        expression: {
+          left: {
+            name: "a",
+            type: "Identifier",
+          },
+          operator: "=",
+          right: {
+            elements: [
+              {
+                type: "Literal",
+                value: 1,
+              },
+              {
+                argument: {
+                  type: "Literal",
+                  value: 1,
+                },
+                operator: "-",
+                type: "UnaryExpression",
+              }
+            ],
+            type: "ArrayExpression",
+          },
+          type: "AssignmentExpression",
+        },
+        type: "ExpressionStatement",
+      },
+    ],
+    type: "Program",
+  });
+});

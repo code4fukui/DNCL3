@@ -15,7 +15,7 @@ const reserved_none_blacketmode = [
 
 const isNumber = (c) => "0123456789".indexOf(c) >= 0;
 const isSymbol = (c) => "{}()[].:".indexOf(c) >= 0;
-const isOperator = (c) => "+-*/%=!<>,".indexOf(c) >= 0;
+const isOperator = (c) => "+-*/%=!<>".indexOf(c) >= 0;
 const isWhite = (c) => " \t\n".indexOf(c) >= 0;
 
 export class Parser {
@@ -102,6 +102,8 @@ export class Parser {
         } else if (isNumber(c) || c == ".") {
           res.push(c);
           state = STATE_NUMBER;
+        } else if (c == ",") {
+          return { pos, type: "operator", operator: c };
         } else if (isOperator(c)) {
           res.push(c);
           state = STATE_OPERATOR;
