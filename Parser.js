@@ -363,16 +363,6 @@ export class Parser {
     }
   }
   getConditionValue1() {
-    const t1 = this.getToken();
-    if (t1.type == "(") {
-      const res = this.getCondition();
-      const t2 = this.getToken();
-      if (t2.type != ")") throw new Error("カッコが閉じられていません");
-      return res;
-    } else {
-      this.backToken(t1);
-    }
-    //const v1 = this.getValue();
     const v1 = this.getExpression();
     const op = this.getToken();
     if (op.type != "operator") {

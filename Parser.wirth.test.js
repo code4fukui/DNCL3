@@ -92,36 +92,6 @@ Deno.test("if else endif", async () => {
     }
   );
 });
-/*
-Deno.test("if if endif else if endif endif", async () => {
-  t.assertEquals(parse(`
-  if 0
-    print 0
-    if 1
-      print 10
-    endif
-  else
-    print 1
-    if 2
-      print 20
-    endif
-  endif`),   {
-      body: [
-        {
-          type: "IfStatement",
-          test: {
-            type: "Literal",
-            value: 0,
-          },
-          consequent: body(0),
-          alternate: body(1),
-        },
-      ],
-      type: "Program",
-    }
-  );
-});
-*/
 Deno.test("if elseif elseif endif", async () => {
   t.assertEquals(parse(`
   if 0
@@ -165,7 +135,6 @@ Deno.test("if elseif elseif endif", async () => {
     }
   );
 });
-
 Deno.test("issues#11", async () => {
 const testcode = `
 if 0
@@ -331,4 +300,54 @@ end
 });
 });
 
-
+Deno.test("if with blacket", async () => {
+  const p = parse(`
+if (0)=0
+  print "true"
+endif`);
+  console.log(p.body.consequent);
+  t.assertEquals(p,
+    {
+      body: [
+        {
+          type: "IfStatement",
+          test: {
+            type: "BinaryExpression",
+            left: {
+              type: "Literal",
+              value: 0,
+            },
+            operator: "==",
+            right: {
+              type: "Literal",
+              value: 0,
+            },
+          },
+          consequent: {
+            type: "BlockStatement",
+            body: [
+              {
+                type: "ExpressionStatement",
+                expression: {
+                  type: "CallExpression",
+                  arguments: [
+                    {
+                      type: "Literal",
+                      value: "true",
+                    },
+                  ],
+                  callee:  {
+                    name: "print",
+                    type: "Identifier",
+                  },
+                }
+              },
+            ],
+          },
+          alternate: null,
+        },
+      ],
+      type: "Program",
+    }
+  );
+});
