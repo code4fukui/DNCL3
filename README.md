@@ -1,5 +1,7 @@
 # DNCL3
 
+> 日本語のREADMEはこちらです: [README.ja.md](README.ja.md)
+
 The DNCL3 is a procedure description language designed for algorithm and programming education in high schools.
 
 ## Demo
