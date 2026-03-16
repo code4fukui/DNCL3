@@ -33,4 +33,4 @@ deno -A https://code4fukui.github.io/DNCL3/cli.js examples/bmi.dncl
 ```
 
 ## License
-DNCL3 is an open-source project released under an unspecified license.
+MIT License — see [LICENSE](LICENSE).
